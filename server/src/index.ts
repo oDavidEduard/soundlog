@@ -1,6 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { prisma } from './lib/prisma';
 
 dotenv.config();
 
@@ -12,6 +14,15 @@ app.use(express.json())
 
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', project: 'soundlog'})
+})
+
+app.get('/health/db', async (_req, res) => {
+    try{
+        await prisma.$queryRaw`SELECT 1`
+        res.json({ status: 'ok', db: 'connected'})
+    } catch (e) {
+        res.status(500).json({ status: 'error', db: 'disconnected'})
+    }
 })
 
 app.listen(PORT, () => {
