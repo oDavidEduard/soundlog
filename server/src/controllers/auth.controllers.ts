@@ -25,5 +25,46 @@ const ERROR_MAP: Record<string, { status: number; message: string }> = {
   USER_NOT_FOUND:      { status: 404, message: 'Usuário não encontrado' },
 }
 
-//export async function register(req: Request, res: Response).....
+export async function register(req: Request, res: Response){
+    const parsed = registerSchema.safeParse(req.body)
+    if(!parsed.success){
+        return res.status(400).json({ error: parsed.error.issues[0].message })
+    }
+
+    try{
+        const result = await authService.register(parsed.data)
+        return res.status(201).json(result)
+    } catch (err: any){
+        const known = ERROR_MAP[err.message]
+        if(known) return res.status(known.status).json({ error: known.message })
+        return res.status(500).json({ error: 'Erro interno no servidor' })
+    }
+}
+
+export async function login(req: Request, res: Response){
+    const parsed = loginSchema.safeParse(req.body)
+    if(!parsed.success){
+        return res.status(400).json({ error: 'Dados inválidos.' })
+    }
+
+    try{
+        const result = await authService.login(parsed.data)
+        return res.status(201).json(result)
+    } catch (err: any){
+        const known = ERROR_MAP[err.message]
+        if(known) return res.status(known.status).json({ error: known.message })
+        return res.status(500).json({ error: 'Erro interno no servidor' })
+    }
+}
+
+export async function me(req: Request, res: Response){
+    try{
+        const result = await authService.getMe(req.user!.id)
+        return res.status(201).json(result)
+    } catch (err: any){
+        const known = ERROR_MAP[err.message]
+        if(known) return res.status(known.status).json({ error: known.message })
+        return res.status(500).json({ error: 'Erro interno no servidor' })
+    }
+}
 
